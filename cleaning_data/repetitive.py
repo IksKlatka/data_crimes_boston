@@ -15,9 +15,12 @@ def file_to_df(path: str) -> pd.DataFrame:
 
     return dataframe
 
-def drop_missing_lat_long(df: pd.DataFrame):
-
-
+def drop_missing_lat_long(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    This is for when I have no longer idea how to input missing data in these columns.
+    :param df: pd.DataFrame
+    :return: pd.DataFrame
+    """
     lat = df['LAT'].isna()
     long = df['LONG'].isna()
     lat_equals_long = lat.equals(long)
@@ -27,6 +30,12 @@ def drop_missing_lat_long(df: pd.DataFrame):
     if lat_equals_long:
         df = df.dropna(subset=["LAT", "LONG"])
         print(f'Deleted {percent}% of csv data.')
+
+    return df
+
+def fill_na_ucr_and_shootings(df: pd.DataFrame) -> pd.DataFrame:
+    df['SHOOTING'] = df['SHOOTING'].fillna('N')
+    df['UCR_PART'] = df['UCR_PART'].fillna('Other')
 
     return df
 

@@ -2,3 +2,5 @@ venv
 data
 cleaning_data/.env
 *.pyc
+desktop.ini
+.idea/
