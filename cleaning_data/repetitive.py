@@ -26,6 +26,43 @@ def drop_missing_lat_long(df: pd.DataFrame):
 
     return df
 
+def fill_missing_lat_long(df: pd.DataFrame) -> pd.DataFrame:
+    null_streets = df[(df['Lat'].isnull()) & (df['Long'].isnull())]['STREET']
+
+    # print(len(null_streets.unique())) # 334
+
+    street_dict = {}
+    for street in null_streets.unique():
+        street_dict[street] = {}
+
+    for street in street_dict.keys():
+        # Sprawdź, czy istnieją niepuste dane dla danej ulicy
+        lat_data = df.loc[df['STREET'] == street, 'Lat']
+        long_data = df.loc[df['STREET'] == street, 'Long']
+
+        if not lat_data.isnull().all() and not long_data.isnull().all():
+            mean_lat = lat_data.median()
+            mean_long = long_data.median()
+            street_dict[street]['mean_lat'] = mean_lat
+            street_dict[street]['mean_long'] = mean_long
+            street_dict[street]['mean_location'] = [mean_lat, mean_long]
+        else:
+            # W przypadku braku wystarczającej liczby danych, ustaw wartość NaN
+            street_dict[street]['mean_lat'] = float('nan')
+            street_dict[street]['mean_long'] = float('nan')
+            street_dict[street]['mean_location'] = float('nan')
+
+
+    for index, row in df.iterrows():
+        street = row['STREET']
+        if pd.isnull(row['Lat']) and pd.isnull(row['Long']):
+            df.at[index, 'Lat'] = street_dict[street]['mean_lat']
+            df.at[index, 'Long'] = street_dict[street]['mean_long']
+            df.at[index, 'Location'] = street_dict[street]['mean_location']
+
+    # print(street_dict)
+    return df
+
 def spit_date_and_time(df: pd.DataFrame, col_name: str):
 
     col_name = col_name.upper()
