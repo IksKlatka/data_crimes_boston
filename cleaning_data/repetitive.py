@@ -2,32 +2,36 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 
+def config():
+    pd.set_option('display.max_columns', None)
+    pd.set_option('display.max_rows', None)
 
 def file_to_df(path: str) -> pd.DataFrame:
 
     load_dotenv()
     file = pd.read_csv(os.getenv(path))
     dataframe = pd.DataFrame(file)
+    dataframe.columns = dataframe.columns.str.upper()
 
     return dataframe
 
 def drop_missing_lat_long(df: pd.DataFrame):
 
 
-    lat = df['Latitude'].isna()
-    long = df['Longitude'].isna()
+    lat = df['LAT'].isna()
+    long = df['LONG'].isna()
     lat_equals_long = lat.equals(long)
 
-    percent = round(df["Latitude"].isnull().sum() / len(df.index) * 100, 2)
+    percent = round(df["LAT"].isnull().sum() / len(df.index) * 100, 2)
 
     if lat_equals_long:
-        df = df.dropna(subset=["Latitude", "Longitude"])
+        df = df.dropna(subset=["LAT", "LONG"])
         print(f'Deleted {percent}% of csv data.')
 
     return df
 
 def fill_missing_lat_long(df: pd.DataFrame) -> pd.DataFrame:
-    null_streets = df[(df['Lat'].isnull()) & (df['Long'].isnull())]['STREET']
+    null_streets = df[(df['LAT'].isnull()) & (df['LONG'].isnull())]['STREET']
 
     # print(len(null_streets.unique())) # 334
 
@@ -37,8 +41,8 @@ def fill_missing_lat_long(df: pd.DataFrame) -> pd.DataFrame:
 
     for street in street_dict.keys():
         # Sprawdź, czy istnieją niepuste dane dla danej ulicy
-        lat_data = df.loc[df['STREET'] == street, 'Lat']
-        long_data = df.loc[df['STREET'] == street, 'Long']
+        lat_data = df.loc[df['STREET'] == street, 'LAT']
+        long_data = df.loc[df['STREET'] == street, 'LONG']
 
         if not lat_data.isnull().all() and not long_data.isnull().all():
             mean_lat = lat_data.median()
@@ -55,10 +59,10 @@ def fill_missing_lat_long(df: pd.DataFrame) -> pd.DataFrame:
 
     for index, row in df.iterrows():
         street = row['STREET']
-        if pd.isnull(row['Lat']) and pd.isnull(row['Long']):
-            df.at[index, 'Lat'] = street_dict[street]['mean_lat']
-            df.at[index, 'Long'] = street_dict[street]['mean_long']
-            df.at[index, 'Location'] = street_dict[street]['mean_location']
+        if pd.isnull(row['LAT']) and pd.isnull(row['LONG']):
+            df.at[index, 'LAT'] = street_dict[street]['mean_lat']
+            df.at[index, 'LONG'] = street_dict[street]['mean_long']
+            df.at[index, 'LOCATION'] = street_dict[street]['mean_location']
 
     # print(street_dict)
     return df
@@ -72,8 +76,8 @@ def spit_date_and_time(df: pd.DataFrame, col_name: str):
 
 
     df.drop(col_name, axis=1, inplace=True)
-    df.insert(7, 'Date', date, allow_duplicates=True)
-    df.insert(8, 'Time', time, allow_duplicates=True)
+    df.insert(7, 'DATE', date, allow_duplicates=True)
+    df.insert(8, 'TIME', time, allow_duplicates=True)
 
     return df
 
