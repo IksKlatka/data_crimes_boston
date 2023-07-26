@@ -1,0 +1,6 @@
+pandas
+matplotlib
+flask_sqlalchemy
+flask
+asyncio
+python_dotenv
