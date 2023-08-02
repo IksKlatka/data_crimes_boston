@@ -1,4 +1,8 @@
+import pandas as pd
+
 from repetitive import *
+
+pd.set_option('display.max_columns', None)
 
 
 def clean_all(dataframe: pd.DataFrame) -> pd.DataFrame:
@@ -20,9 +24,9 @@ def clean_all(dataframe: pd.DataFrame) -> pd.DataFrame:
 if __name__ == '__main__':
 
     config()
-    df = file_to_df("YEAR_2016")
+    df = file_to_df("YEAR_2017")
     df = change_dtypes(df)
     df = clean_all(df)
-    # df = ultimate_drop(df)
+    df = ultimate_drop(df)
 
     info(df)

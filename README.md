@@ -1,7 +1,7 @@
 Boston crime data analysis project 2016-2022. 
 
-The analysis will focus on locations, and for this reason 
-missing data from this area will be removed, provided that 
+The analysis will focus time and type of crime, and for this reason 
+missing data about location will be removed, provided that 
 the removed data represents less than 10% of the total dataset. 
 The data will be visualized using graphs. 
 

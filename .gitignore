@@ -4,3 +4,5 @@ cleaning_data/.env
 *.pyc
 desktop.ini
 .idea/
+cleaning_data/boston_districts.py
+cleaning_data/shithole.py
