@@ -12,16 +12,17 @@ def info(dataframe: pd.DataFrame):
     print(dataframe.isna().sum())
     print('--'*15)
 
-def file_to_df(path: str) -> pd.DataFrame:
+def file_to_df(path: str, separator: str) -> pd.DataFrame:
     """
     Upload data from a file. Make column names uppercase and all values lowercase.
     Split date and time to separate columns. Convert Date to datetime format.
     Sort values by DATE column, ascending. Drop Location column.
+    :param separator:
     :param path: to vsc file
     :return: pd.DataFrame
     """
     load_dotenv()
-    file = pd.read_csv(os.getenv(path))
+    file = pd.read_csv(os.getenv(path), sep=separator)
     dataframe = pd.DataFrame(file)
 
 
@@ -161,5 +162,11 @@ def ultimate_drop(dataframe: pd.DataFrame) -> pd.DataFrame:
     return dataframe
 
 
-def save_to_file():
-    pass
+def save_to_file(df: pd.DataFrame, name: str):
+    """
+    :param df:
+    :param name:
+    :return:
+    """
+    df.to_csv(fr'C:\Users\igakl\Desktop\DataCrimesBoston\cleaned_data/{name}.csv', sep=';')
+    print(f"File {name} saved.")

@@ -20,9 +20,13 @@ def clean_all(dataframe: pd.DataFrame) -> pd.DataFrame:
 if __name__ == '__main__':
 
     config()
-    df = file_to_df("YEAR_2016")
-    df = change_dtypes(df)
+    df = file_to_df("YEAR_2016", separator=',')
     df = clean_all(df)
-    # df = ultimate_drop(df)
-
+    df = ultimate_drop(df)
     info(df)
+    save = input("Do you want to save cleaned data to file? Y/N ").upper()
+    if save == "Y": save_to_file(df, "year_2016")
+
+
+
+

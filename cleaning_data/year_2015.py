@@ -1,26 +1,6 @@
 import pandas as pd
 from repetitive import *
 
-pd.set_option('display.max_columns', None)
-pd.set_option('display.max_rows', None)
-
-def fill_na_year_2015(dataframe: pd.DataFrame) -> pd.DataFrame:
-    dataframe['SHOOTING'] = dataframe['SHOOTING'].fillna('N')
-    dataframe['UCR_PART'] = dataframe['UCR_PART'].fillna('Other')
-
-    # Missing Districts
-    dataframe.loc[dataframe['LOCATION'] == '(42.33178000, -71.11328500)', 'DISTRICT'] = 'B2'
-    dataframe.loc[dataframe['LOCATION'] == '(42.25794926, -71.16122880)', 'DISTRICT'] = 'B2'
-    dataframe.loc[dataframe['LOCATION'] == '(42.38259978, -71.03980383)', 'DISTRICT'] = 'A7'
-
-    # Missing Streets
-    dataframe.loc[dataframe['LOCATION'] == '(42.32956715, -71.08597421)', 'STREET'] = 'Malcolm X Blvd'
-    dataframe.loc[dataframe['LOCATION'] == '(42.28085450, -71.08458278)', 'STREET'] = 'Morton St'
-    dataframe.loc[dataframe['LOCATION'] == '(42.32626055, -71.05508570)', 'STREET'] = "Msgr O'Callaghan Way"
-    dataframe.loc[dataframe['LOCATION'] == '(42.29810706, -71.06246102)', 'STREET'] = 'Park St'
-
-    return dataframe
-
 def drop_records(dataframe: pd.DataFrame) -> pd.DataFrame:
 
     dataframe = dataframe.dropna(subset=['DISTRICT', 'LAT', 'LONG'], how='all')
@@ -53,8 +33,24 @@ def clean_all(dataframe: pd.DataFrame) -> pd.DataFrame:
 
 if __name__ == '__main__':
 
+    config()
     df = file_to_df("YEAR_2015")
-    df = clean_all(df)
 
+    # Missing Districts
+    # df.loc[(df['LAT'] == '42.33178000') & (df['LONG'] == '-71.11328500'), 'DISTRICT'] = 'B2'
+    # df.loc[(df['LAT'] == '42.25794926') & (df['LONG'] == '-71.16122880'), 'DISTRICT'] = 'B2'
+    # df.loc[(df['LAT'] == '42.38259978') & (df['LONG'] == '-71.03980383'), 'DISTRICT'] = 'A7'
+
+    # Missing Streets
+    # df.loc[(df['LAT'] == '42.32956715') & (df['LONG'] == '-71.08597421'), 'STREET'] = 'Malcolm X Blvd'
+    # df.loc[(df['LAT'] == '42.28085450') & (df['LONG'] == '-71.08458278'), 'STREET'] = 'Morton St'
+    # df.loc[(df['LAT'] == '42.32626055') & (df['LONG'] == '-71.05508570'), 'STREET'] = "Msgr O'Callaghan Way"
+    # df.loc[(df['LAT'] == '42.29810706') & (df['LONG'] == '-71.06246102'), 'STREET'] = 'Park St'
+
+    df = clean_all(df)
+    df = ultimate_drop(df)
     info(df)
+
+    save = input("Do you want to save cleaned data to file? Y/N ").upper()
+    if save == "Y": save_to_file(df, "year_2015")
 
