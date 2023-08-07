@@ -21,12 +21,14 @@ def upgrade() -> None:
     CREATE TABLE incidents (
         id SERIAL PRIMARY KEY, 
         number TEXT NOT NULL UNIQUE, 
-        offense_id INT REFERENCES offenses(id) ON DELETE CASCADE,
+        offense_code INT REFERENCES offenses(code) ON DELETE CASCADE,
         area_id INT REFERENCES areas(id) ON DELETE CASCADE, 
-        shooting BOOLEAN NOT NULL,
+        shooting INT NOT NULL,
         date DATE NOT NULL,
-        time TIME NOT NULL,
+        time TEXT NOT NULL,
         day_of_week INT NOT NULL
+        
+        
         );
 """)
 
