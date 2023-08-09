@@ -12,11 +12,11 @@ from dotenv import load_dotenv
 from sqlalchemy_models import Incident
 
 
-class AreaDAL:
+class IncidentDAL:
 
     def __init__(self):
         load_dotenv()
-        self.engine = create_async_engine(os.getenv("PSQL_URL", None), echo=True)
+        self.engine = create_async_engine(os.getenv("PSQL_URL", None))
         self.async_session = async_sessionmaker(self.engine, expire_on_commit=False)
 
         print("Connected!")
@@ -73,7 +73,7 @@ class AreaDAL:
                 await session.commit()
 
 async def main_():
-    db_service = AreaDAL()
+    db_service = IncidentDAL()
     await db_service.insert_incident(Incident(number='ABC12345', offense_code=3, area_id=1,
                                               shooting=0, date=datetime.date(2023,1,1), time='00:00:01',
                                               day_of_week=7))

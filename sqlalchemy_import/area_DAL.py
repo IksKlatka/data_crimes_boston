@@ -42,7 +42,6 @@ class AreaDAL:
         old_offense = await self.get_area(area_id)
         if not old_offense:
             await self.insert_area(Area(street=street, reporting_area=reporting_area, district=district))
-
         else:
             async with self.async_session() as session:
                 async with session.begin():

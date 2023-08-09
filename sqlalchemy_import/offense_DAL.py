@@ -31,13 +31,13 @@ class OffenseDAL:
             result = await session.execute(select(Offense).order_by(Offense.id).limit(limit))
             return result.scalars().all()
 
-    async def create_offense(self, offense: Offense) -> Offense:
+    async def insert_offense(self, offense: Offense) -> Offense:
         async with self.async_session() as session:
             async with session.begin():
                 session.add(offense)
                 await session.commit()
 
-    async def update_offense(self, code: int, code_group: Optional[str], description: Optional[str]) -> Offense:
+    async def upsert_offense(self, code: int, code_group: Optional[str], description: Optional[str]) -> Offense:
         old_offense = await self.get_offense(code)
         if not old_offense:
             async with self.async_session() as session:
