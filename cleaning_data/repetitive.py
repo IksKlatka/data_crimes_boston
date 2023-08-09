@@ -12,44 +12,65 @@ def info(dataframe: pd.DataFrame):
     print(dataframe.isna().sum())
     print('--'*15)
 
-def file_to_df(path: str, separator: str) -> pd.DataFrame:
+def file_to_df(path: str, separator: str, ind_col = None) -> pd.DataFrame:
     """
     Upload data from a file. Make column names uppercase and all values lowercase.
     Split date and time to separate columns. Convert Date to datetime format.
     Sort values by DATE column, ascending. Drop Location column.
+    :param ind_col:
     :param separator:
     :param path: to vsc file
     :return: pd.DataFrame
     """
     load_dotenv()
-    file = pd.read_csv(os.getenv(path), sep=separator)
+    file = pd.read_csv(os.getenv(path), sep=separator, index_col=ind_col)
     dataframe = pd.DataFrame(file)
+    return dataframe
 
-
+def case_indexing_date_time(dataframe: pd.DataFrame) -> pd.DataFrame:
+    """
+    Changing lettercase of columns and values. Splitting 'OCCURRED ON DATE' into
+    DATE and TIME. Setting index to DATE. Drop LOCATION, which is combination of
+    LAT and LONG. Changing notation of 'DAY OF WEEK' to numeric (from 1 to 7).
+    :param dataframe:
+    :return:
+    """
     dataframe.columns = dataframe.columns.str.upper()
-    for column in dataframe.columns:
-        dataframe[column]= dataframe[column].astype(str).str.lower()
+    dataframe['OFFENSE_DESCRIPTION']= dataframe['OFFENSE_DESCRIPTION'].astype(str).str.lower()
+    dataframe['STREET']= dataframe['STREET'].astype(str).str.capitalize()
 
     dataframe = spit_date_and_time(dataframe, 'OCCURRED_ON_DATE')
     dataframe['DATE'] = pd.to_datetime(dataframe['DATE'])
 
     dataframe = dataframe.drop('LOCATION', axis=1)
-
     dataframe = dataframe.sort_values(by=['DATE'])
     dataframe = dataframe.reset_index(drop=True)
+
+    day_of_week = {
+        'monday': 1,
+        'tuesday': 2,
+        'wednesday': 3,
+        'thursday': 4,
+        'friday': 5,
+        'saturday': 6,
+        'sunday': 7
+    }
+
+    dataframe['DAY_OF_WEEK'] = dataframe['DAY_OF_WEEK']\
+        .map(lambda x: day_of_week.get(x.lower()))
 
     return dataframe
 
 def change_dtypes(dataframe: pd.DataFrame) -> pd.DataFrame:
 
     dataframe['DATE'] = pd.to_datetime(dataframe['DATE'])
-    dataframe['HOUR'] = dataframe['HOUR'].astype('int32')
-    dataframe['MONTH'] = dataframe['MONTH'].astype('int32')
-    dataframe['YEAR'] = dataframe['YEAR'].astype('int32')
-    dataframe['OFFENSE_CODE'] = dataframe['OFFENSE_CODE'].astype('int32')
+    dataframe['HOUR'] = dataframe['HOUR'].astype('Int32')
+    dataframe['MONTH'] = dataframe['MONTH'].astype('Int32')
+    dataframe['YEAR'] = dataframe['YEAR'].astype('Int32')
+    dataframe['OFFENSE_CODE'] = dataframe['OFFENSE_CODE'].astype('Int32')
     dataframe['LAT'] = dataframe['LAT'].astype('float64')
     dataframe['LONG'] = dataframe['LONG'].astype('float64')
-    dataframe['REPORTING_AREA'] = pd.to_numeric(dataframe['REPORTING_AREA'], errors="coerce")
+    dataframe['REPORTING_AREA'] = pd.to_numeric(dataframe['REPORTING_AREA'], errors="coerce").astype('Int32')
 
     return dataframe
 
@@ -72,7 +93,8 @@ def fill_missing_ucr_and_shootings(dataframe: pd.DataFrame) -> pd.DataFrame:
     dataframe = dataframe.copy()
     dataframe[:] = dataframe[:].replace('nan', pd.NA)
 
-    dataframe['SHOOTING'] = dataframe['SHOOTING'].fillna('N')
+    dataframe['SHOOTING'] = dataframe['SHOOTING'].fillna(0)
+    dataframe['SHOOTING'] = dataframe['SHOOTING'].astype(str).str.lower()
     dataframe['UCR_PART'] = dataframe['UCR_PART'].fillna('Other')
 
     return dataframe
@@ -85,16 +107,13 @@ def fill_missing_lat_long_by_street(dataframe: pd.DataFrame) -> pd.DataFrame:
     :param dataframe:
     :return:
     """
-
     null_streets = dataframe[(dataframe['LAT'].isnull()) & (dataframe['LONG'].isnull())]['STREET']
-
 
     street_dict = {}
     for street in null_streets.unique():
         street_dict[street] = {}
 
     for street in street_dict.keys():
-        # Sprawdź, czy istnieją niepuste dane dla danej ulicy
         lat_data = dataframe.loc[dataframe['STREET'] == street, 'LAT']
         long_data = dataframe.loc[dataframe['STREET'] == street, 'LONG']
 
@@ -105,10 +124,8 @@ def fill_missing_lat_long_by_street(dataframe: pd.DataFrame) -> pd.DataFrame:
             street_dict[street]['mean_long'] = mean_long
             street_dict[street]['mean_location'] = [mean_lat, mean_long]
         else:
-            # W przypadku braku wystarczającej liczby danych, ustaw wartość NaN
             street_dict[street]['mean_lat'] = float('nan')
             street_dict[street]['mean_long'] = float('nan')
-
 
     for index, row in dataframe.iterrows():
         street = row['STREET']
@@ -168,5 +185,5 @@ def save_to_file(df: pd.DataFrame, name: str):
     :param name:
     :return:
     """
-    df.to_csv(fr'C:\Users\igakl\Desktop\DataCrimesBoston\cleaned_data/{name}.csv', sep=';')
+    df.to_csv(fr'C:\Users\igakl\Desktop\DataCrimesBoston\cleaned_data/{name}.csv', sep=';', index=False)
     print(f"File {name} saved.")

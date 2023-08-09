@@ -1,4 +1,3 @@
-import pandas as pd
 from repetitive import *
 
 def drop_records(dataframe: pd.DataFrame) -> pd.DataFrame:
@@ -17,6 +16,7 @@ def drop_records(dataframe: pd.DataFrame) -> pd.DataFrame:
 
 def clean_all(dataframe: pd.DataFrame) -> pd.DataFrame:
 
+    dataframe = case_indexing_date_time(dataframe)
     dataframe = change_dtypes(dataframe)
     dataframe = dataframe.drop_duplicates(subset=['INCIDENT_NUMBER', 'OFFENSE_DESCRIPTION', 'DATE', 'TIME'])
     dataframe = fill_missing_ucr_and_shootings(dataframe)
@@ -34,7 +34,7 @@ def clean_all(dataframe: pd.DataFrame) -> pd.DataFrame:
 if __name__ == '__main__':
 
     config()
-    df = file_to_df("YEAR_2015")
+    df = file_to_df("YEAR_2015", separator=',')
 
     # Missing Districts
     # df.loc[(df['LAT'] == '42.33178000') & (df['LONG'] == '-71.11328500'), 'DISTRICT'] = 'B2'
