@@ -1,6 +1,10 @@
-pandas
+pandas~=2.0.3
 matplotlib
 flask_sqlalchemy
 flask
 asyncio
-python_dotenv
+sqlalchemy~=2.0.19
+asyncpg
+psycopg2
+alembic~=1.11.1
+python-dotenv~=1.0.0

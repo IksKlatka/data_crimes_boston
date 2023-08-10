@@ -2,7 +2,7 @@ import datetime
 
 import pandas as pd
 from cleaning_data.repetitive import file_to_df
-from sqlalchemy_models import Area, Incident, Offense
+from models import Area, Incident, Offense
 
 def sep_areas(dataframe: pd.DataFrame) -> list[dict]:
     dataframe = dataframe[['STREET',

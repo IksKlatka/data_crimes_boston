@@ -9,7 +9,7 @@ from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from dotenv import load_dotenv
 
-from sqlalchemy_models import Incident
+from models import Incident
 
 
 class IncidentDAL:

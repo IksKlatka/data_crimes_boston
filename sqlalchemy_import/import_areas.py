@@ -1,16 +1,16 @@
 import asyncio
 from asyncio import run
 
-from nosqlalchemy_import.data_for_models_and_dataclasses import sep_areas
+from sqlalchemy_import.dataclasses_to_models import sep_areas
 from cleaning_data.repetitive import file_to_df
 from sqlalchemy_import.area_DAL import AreaDAL
 from dataclasses_to_models import to_area_model
-
+from models import Incident, Area
 
 async def import_areas():
     db = AreaDAL()
 
-    df = file_to_df("CLEANED_2015", separator=';')
+    df = file_to_df("CLEANED_2016", separator=';')
     areas = to_area_model(sep_areas(df))
 
     for i, dic in enumerate(areas):

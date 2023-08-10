@@ -8,8 +8,7 @@ from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from dotenv import load_dotenv
 
-from sqlalchemy_models import Offense
-
+from models import Offense
 
 
 
@@ -68,7 +67,7 @@ async def main_():
 
     offense_service = OffenseDAL()
     s = await offense_service.get_all_offenses(10)
-    await offense_service.update_offense(code=3, code_group='666', description='exorcism')
+    await offense_service.upsert_offense(code=3, code_group='666', description='exorcism')
     # await offense_service.delete_offense(code=3)
 
 if __name__ == '__main__':

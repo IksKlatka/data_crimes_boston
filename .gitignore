@@ -1,6 +1,5 @@
 venv
 data
-cleaning_data/.env
 *.pyc
 desktop.ini
 .idea/
@@ -8,3 +7,5 @@ cleaning_data/boston_districts.py
 cleaning_data/shithole.py
 cleaning_data/filling_streets.py
 cleaned_data
+migrations/README
+*/.env

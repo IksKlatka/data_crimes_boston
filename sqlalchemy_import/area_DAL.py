@@ -8,14 +8,14 @@ from sqlalchemy.future import select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
 from dotenv import load_dotenv
 
-from sqlalchemy_models import Area
+from models import Area
 
 
 class AreaDAL:
 
     def __init__(self):
         load_dotenv()
-        self.engine = create_async_engine(os.getenv("PSQL_URL", None), echo=True)
+        self.engine = create_async_engine(os.getenv("PSQL_URL", None)) #, echo=True
         self.async_session = async_sessionmaker(self.engine, expire_on_commit=False)
 
         print("Connected!")
