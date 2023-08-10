@@ -61,7 +61,6 @@ def run_migrations_offline() -> None:
 
     with context.begin_transaction():
         logging.info("Running OFFLINE migrations..")
-        context.execute(f"SET SEARCH_PATH TO {SCHEMA}")
         context.run_migrations()
 
 
@@ -87,7 +86,6 @@ def run_migrations_online() -> None:
 
         with context.begin_transaction():
             logging.info("Running ONLINE migrations..")
-            context.execute(f"SET SEARCH_PATH TO {SCHEMA}")
             context.run_migrations()
 
 

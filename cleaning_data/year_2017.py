@@ -7,6 +7,7 @@ pd.set_option('display.max_columns', None)
 
 def clean_all(dataframe: pd.DataFrame) -> pd.DataFrame:
 
+    dataframe = case_indexing_date_time(dataframe)
     dataframe = change_dtypes(dataframe)
     dataframe = dataframe.drop_duplicates(subset=['INCIDENT_NUMBER', 'OFFENSE_DESCRIPTION', 'DATE', 'TIME'])
     dataframe = fill_missing_ucr_and_shootings(dataframe)
@@ -25,7 +26,6 @@ if __name__ == '__main__':
 
     config()
     df = file_to_df("YEAR_2017", separator=',')
-    df = change_dtypes(df)
     df = clean_all(df)
     df = ultimate_drop(df)
 
