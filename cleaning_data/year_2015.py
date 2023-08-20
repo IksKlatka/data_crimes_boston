@@ -17,9 +17,10 @@ def drop_records(dataframe: pd.DataFrame) -> pd.DataFrame:
 def clean_all(dataframe: pd.DataFrame) -> pd.DataFrame:
 
     dataframe = case_indexing_date_time(dataframe)
+    dataframe = fill_missing_ucr_and_shootings(dataframe)
+
     dataframe = change_dtypes(dataframe)
     dataframe = dataframe.drop_duplicates(subset=['INCIDENT_NUMBER', 'OFFENSE_DESCRIPTION', 'DATE', 'TIME'])
-    dataframe = fill_missing_ucr_and_shootings(dataframe)
     dataframe = fill_missing_lat_long_by_street(dataframe)
     dataframe = fill_missing_by(dataframe, "street", "district")
     dataframe = fill_missing_by(dataframe, "district", "street")

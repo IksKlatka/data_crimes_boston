@@ -9,3 +9,5 @@ cleaning_data/filling_streets.py
 cleaned_data
 migrations/README
 */.env
+.env
+sqlalchemy_import/testing/.pytest_cache

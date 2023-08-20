@@ -71,6 +71,7 @@ def change_dtypes(dataframe: pd.DataFrame) -> pd.DataFrame:
     dataframe['LAT'] = dataframe['LAT'].astype('float64')
     dataframe['LONG'] = dataframe['LONG'].astype('float64')
     dataframe['REPORTING_AREA'] = pd.to_numeric(dataframe['REPORTING_AREA'], errors="coerce").astype('Int32')
+    dataframe['SHOOTING'] = dataframe['SHOOTING'].astype('Int32')
 
     return dataframe
 
@@ -92,9 +93,10 @@ def fill_missing_ucr_and_shootings(dataframe: pd.DataFrame) -> pd.DataFrame:
 
     dataframe = dataframe.copy()
     dataframe[:] = dataframe[:].replace('nan', pd.NA)
+    dataframe['SHOOTING'] = dataframe['SHOOTING'].fillna('0')
 
-    dataframe['SHOOTING'] = dataframe['SHOOTING'].fillna(0)
     dataframe['SHOOTING'] = dataframe['SHOOTING'].astype(str).str.lower()
+    dataframe['SHOOTING'] = dataframe['SHOOTING'].replace('y', '1')
     dataframe['UCR_PART'] = dataframe['UCR_PART'].fillna('Other')
 
     return dataframe
