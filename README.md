@@ -13,3 +13,8 @@ When this project is finished, next one will be created:
 REST API based on patterns found and created in this project. 
 
 
+Data for this project comes from kaggle, provided by Analyze Boston:
+https://www.kaggle.com/datasets/AnalyzeBoston/crimes-in-boston
+
+
+
