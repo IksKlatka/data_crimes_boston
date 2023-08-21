@@ -120,20 +120,29 @@ def fill_missing_lat_long_by_street(dataframe: pd.DataFrame) -> pd.DataFrame:
         long_data = dataframe.loc[dataframe['STREET'] == street, 'LONG']
 
         if not lat_data.isnull().all() and not long_data.isnull().all():
-            mean_lat = lat_data.median()
-            mean_long = long_data.median()
+            mean_lat = lat_data.mean()
+            mean_long = long_data.mean()
             street_dict[street]['mean_lat'] = mean_lat
             street_dict[street]['mean_long'] = mean_long
-            street_dict[street]['mean_location'] = [mean_lat, mean_long]
         else:
-            street_dict[street]['mean_lat'] = float('nan')
-            street_dict[street]['mean_long'] = float('nan')
+            cleaned_lat = lat_data.dropna()
+            cleaned_long = long_data.dropna()
+
+            if len(cleaned_lat) > 0 and len(cleaned_long) > 0:
+                mean_lat = lat_data.mean()
+                mean_long = long_data.mean()
+                street_dict[street]['mean_lat'] = mean_lat
+                street_dict[street]['mean_long'] = mean_long
+            else:
+                street_dict[street]['mean_lat'] = float('nan')
+                street_dict[street]['mean_long'] = float('nan')
 
     for index, row in dataframe.iterrows():
         street = row['STREET']
         if pd.isnull(row['LAT']) and pd.isnull(row['LONG']):
             dataframe.at[index, 'LAT'] = street_dict[street]['mean_lat']
             dataframe.at[index, 'LONG'] = street_dict[street]['mean_long']
+
 
     dataframe['LAT'] = dataframe['LAT'].round(7)
     dataframe['LONG'] = dataframe['LONG'].round(7)
