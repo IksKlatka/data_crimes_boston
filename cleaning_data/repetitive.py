@@ -1,6 +1,8 @@
 import os
 import pandas as pd
 from dotenv import load_dotenv
+import re
+
 
 def config():
     pd.set_option('display.max_columns', None)
@@ -37,7 +39,7 @@ def case_indexing_date_time(dataframe: pd.DataFrame) -> pd.DataFrame:
     """
     dataframe.columns = dataframe.columns.str.upper()
     dataframe['OFFENSE_DESCRIPTION']= dataframe['OFFENSE_DESCRIPTION'].astype(str).str.lower()
-    dataframe['STREET']= dataframe['STREET'].astype(str).str.capitalize()
+    dataframe['STREET']= dataframe['STREET'].astype(str).str.title()
 
     dataframe = spit_date_and_time(dataframe, 'OCCURRED_ON_DATE')
     dataframe['DATE'] = pd.to_datetime(dataframe['DATE'])
@@ -75,6 +77,14 @@ def change_dtypes(dataframe: pd.DataFrame) -> pd.DataFrame:
 
     return dataframe
 
+def standardize_streets(dataframe):
+    endings = ['St', 'Blvd', 'Ave', 'Ct', 'Dr', 'Rd', 'Sq', 'Brg', 'Pl']
+    pattern = r'\s(' + '|'.join(endings) + r')\b'
+
+    dataframe['STREET'] = dataframe['STREET'].apply(lambda x: re.sub(pattern, '', x, flags=re.IGNORECASE))
+    return dataframe
+
+
 def spit_date_and_time(dataframe: pd.DataFrame, col_name: str):
 
     col_name = col_name.upper()
@@ -105,15 +115,16 @@ def fill_missing_lat_long_by_street(dataframe: pd.DataFrame) -> pd.DataFrame:
     """
     Finds median value of Latitude and Longitude on specific street and
     inputs the value into the field.
-    Rounds Latitude and Longitude up to the same number of decimal places.
+    Rounds Latitude and Longitude up to the same number of decimal places (7).
     :param dataframe:
     :return:
     """
     null_streets = dataframe[(dataframe['LAT'].isnull()) & (dataframe['LONG'].isnull())]['STREET']
-
+    missing_indexes = []
     street_dict = {}
     for street in null_streets.unique():
-        street_dict[street] = {}
+        if street.lower() != 'nan':
+            street_dict[street] = {}
 
     for street in street_dict.keys():
         lat_data = dataframe.loc[dataframe['STREET'] == street, 'LAT']
@@ -139,51 +150,57 @@ def fill_missing_lat_long_by_street(dataframe: pd.DataFrame) -> pd.DataFrame:
 
     for index, row in dataframe.iterrows():
         street = row['STREET']
-        if pd.isnull(row['LAT']) and pd.isnull(row['LONG']):
+        if pd.isnull(row['LAT']) and pd.isnull(row['LONG']) and street in street_dict:
             dataframe.at[index, 'LAT'] = street_dict[street]['mean_lat']
             dataframe.at[index, 'LONG'] = street_dict[street]['mean_long']
+            missing_indexes.append(index)
 
 
     dataframe['LAT'] = dataframe['LAT'].round(7)
     dataframe['LONG'] = dataframe['LONG'].round(7)
 
 
-    return dataframe
+    return dataframe, street_dict
 
-def fill_missing_by(dataframe: pd.DataFrame, column1: str, column2: str) -> pd.DataFrame:
+def fill_missing_by(dataframe: pd.DataFrame, key: str, values: str):
     """
-    Fills missing values in column1 by inserting most common value for this column
-    based on column2.
-
-    :param dataframe:
-    :param column1: to fill null values
-    :param column2: to look for most common value of column1
-    :return: pd.DataFrame
+    Creates a dict with keys = unique keys, then
+    iterates through missing keys in DataFrame and updates null value if
+    any(values) of missing keys is found in dict.values()
     """
 
-    column1, column2 = column1.upper(), column2.upper()
+    key, values = key.upper(), values.upper()
 
-    counter = dataframe.groupby([column1, column2]).size().reset_index(name="COUNT")
+    keys_for_dict = (dataframe[dataframe[key].notnull()][key].unique())
+    df_slice = dataframe.loc[:, [key, values]]
 
-    missing = dataframe[dataframe[column1].isnull()]
+    key_dict = {}
 
-    for i, row in missing.iterrows():
-        col2_value = row[column2]
-        col2_col1_counter = counter[counter[column2] == col2_value]
+    for keys in keys_for_dict:
+        key_dict[keys] = []
 
-        if not col2_col1_counter.empty:
-            most_common_value = missing[missing[column2] == col2_value][column1].iloc[0]
-            dataframe.at[i, column1] = most_common_value
+    for i in range(len(df_slice)):
+        if df_slice.loc[i, key] in key_dict.keys():
+            key_dict[df_slice.loc[i, key]].append(df_slice.loc[i, values])
+
+    missing_data = dataframe.loc[dataframe[key].isnull()][[key, values]]
+
+    for index, row in missing_data.iterrows():
+        value = row[values]
+        for k, v in key_dict.items():
+            if value in v:
+                dataframe.at[index, key] = k
+                break
 
     return dataframe
 
 def ultimate_drop(dataframe: pd.DataFrame) -> pd.DataFrame:
 
-    dataframe = dataframe.dropna(subset=['DISTRICT', 'LAT', 'LONG'], how='all')
+    dataframe = dataframe.dropna(subset=['DISTRICT', 'LAT', 'LONG', 'STREET'], how='all')
     dataframe = dataframe.dropna(subset=['STREET', 'LONG', 'LAT'], how='all')
     dataframe = dataframe.dropna(subset=['LAT', 'LONG'], how='all')
-    dataframe = dataframe.dropna(subset=['DISTRICT', 'STREET'], how='all')
-    dataframe = dataframe.dropna(subset=['REPORTING_AREA', 'LAT', 'LONG'], how='all')
+    # dataframe = dataframe.dropna(subset=['DISTRICT', 'STREET'], how='all')
+    # dataframe = dataframe.dropna(subset=['REPORTING_AREA', 'LAT', 'LONG'], how='all')
     dataframe = dataframe[dataframe['DISTRICT'].str.len() <= 3]
     dataframe = dataframe.dropna(subset='REPORTING_AREA')
 
