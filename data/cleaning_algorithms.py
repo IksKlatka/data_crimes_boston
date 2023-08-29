@@ -2,6 +2,7 @@ import os
 import pandas as pd
 from dotenv import load_dotenv
 import re
+import numpy as np
 
 
 def config():
@@ -84,7 +85,6 @@ def standardize_streets(dataframe):
     dataframe['STREET'] = dataframe['STREET'].apply(lambda x: re.sub(pattern, '', x, flags=re.IGNORECASE))
     return dataframe
 
-
 def spit_date_and_time(dataframe: pd.DataFrame, col_name: str):
 
     col_name = col_name.upper()
@@ -111,30 +111,31 @@ def fill_missing_ucr_and_shootings(dataframe: pd.DataFrame) -> pd.DataFrame:
 
     return dataframe
 
-def fill_missing_lat_long_by_street(dataframe: pd.DataFrame) -> pd.DataFrame:
+def fill_missing_lat_long_by(dataframe: pd.DataFrame,
+                             location: str = 'DISTRICT' or  'STREET') -> pd.DataFrame:
     """
-    Finds median value of Latitude and Longitude on specific street and
+    Finds median value of Latitude and Longitude for specific street or district and
     inputs the value into the field.
-    Rounds Latitude and Longitude up to the same number of decimal places (7).
+    Rounds Latitude and Longitude up to the same number of decimal places.
     :param dataframe:
     :return:
     """
-    null_streets = dataframe[(dataframe['LAT'].isnull()) & (dataframe['LONG'].isnull())]['STREET']
+    null_loc = dataframe[(dataframe['LAT'].isnull()) & (dataframe['LONG'].isnull())][location]
     missing_indexes = []
-    street_dict = {}
-    for street in null_streets.unique():
-        if street.lower() != 'nan':
-            street_dict[street] = {}
+    loc_dict = {}
+    for loc in null_loc.unique():
+        if loc != np.nan :
+            loc_dict[loc] = {}
 
-    for street in street_dict.keys():
-        lat_data = dataframe.loc[dataframe['STREET'] == street, 'LAT']
-        long_data = dataframe.loc[dataframe['STREET'] == street, 'LONG']
+    for loc in loc_dict.keys():
+        lat_data = dataframe.loc[dataframe[location] == loc, 'LAT']
+        long_data = dataframe.loc[dataframe[location] == loc, 'LONG']
 
         if not lat_data.isnull().all() and not long_data.isnull().all():
             mean_lat = lat_data.mean()
             mean_long = long_data.mean()
-            street_dict[street]['mean_lat'] = mean_lat
-            street_dict[street]['mean_long'] = mean_long
+            loc_dict[loc]['mean_lat'] = mean_lat
+            loc_dict[loc]['mean_long'] = mean_long
         else:
             cleaned_lat = lat_data.dropna()
             cleaned_long = long_data.dropna()
@@ -142,17 +143,17 @@ def fill_missing_lat_long_by_street(dataframe: pd.DataFrame) -> pd.DataFrame:
             if len(cleaned_lat) > 0 and len(cleaned_long) > 0:
                 mean_lat = lat_data.mean()
                 mean_long = long_data.mean()
-                street_dict[street]['mean_lat'] = mean_lat
-                street_dict[street]['mean_long'] = mean_long
+                loc_dict[loc]['mean_lat'] = mean_lat
+                loc_dict[loc]['mean_long'] = mean_long
             else:
-                street_dict[street]['mean_lat'] = float('nan')
-                street_dict[street]['mean_long'] = float('nan')
+                loc_dict[loc]['mean_lat'] = float('nan')
+                loc_dict[loc]['mean_long'] = float('nan')
 
     for index, row in dataframe.iterrows():
-        street = row['STREET']
-        if pd.isnull(row['LAT']) and pd.isnull(row['LONG']) and street in street_dict:
-            dataframe.at[index, 'LAT'] = street_dict[street]['mean_lat']
-            dataframe.at[index, 'LONG'] = street_dict[street]['mean_long']
+        loc = row[location]
+        if pd.isnull(row['LAT']) and pd.isnull(row['LONG']) and loc in loc_dict:
+            dataframe.at[index, 'LAT'] = loc_dict[loc]['mean_lat']
+            dataframe.at[index, 'LONG'] = loc_dict[loc]['mean_long']
             missing_indexes.append(index)
 
 
@@ -160,18 +161,23 @@ def fill_missing_lat_long_by_street(dataframe: pd.DataFrame) -> pd.DataFrame:
     dataframe['LONG'] = dataframe['LONG'].round(7)
 
 
-    return dataframe, street_dict
+    return dataframe, loc_dict
 
 def fill_missing_by(dataframe: pd.DataFrame, key: str, values: str):
     """
+    todo: re-define so that values: list[str] for lat and long
     Creates a dict with keys = unique keys, then
     iterates through missing keys in DataFrame and updates null value if
     any(values) of missing keys is found in dict.values()
     """
 
-    key, values = key.upper(), values.upper()
+    key = key.upper()
+    values = values.upper()
+    # values = [i.upper() for i in values]
 
-    keys_for_dict = (dataframe[dataframe[key].notnull()][key].unique())
+    # if len(values) >1:
+
+    keys_for_dict = (dataframe[(dataframe[key].notnull())][key].unique())
     df_slice = dataframe.loc[:, [key, values]]
 
     key_dict = {}
@@ -192,20 +198,23 @@ def fill_missing_by(dataframe: pd.DataFrame, key: str, values: str):
                 dataframe.at[index, key] = k
                 break
 
+    return dataframe, key_dict
+
+def clean_all(dataframe: pd.DataFrame):
+
+    dataframe = case_indexing_date_time(dataframe)
+    dataframe = fill_missing_ucr_and_shootings(dataframe)
+    dataframe = change_dtypes(dataframe)
+    dataframe = standardize_streets(dataframe)
+    dataframe, loc_dict1 = fill_missing_lat_long_by(dataframe, 'DISTRICT')
+    dataframe, loc_dict2 = fill_missing_lat_long_by(dataframe, 'STREET')
+    dataframe, kd1 = fill_missing_by(dataframe, 'district', 'street')
+    dataframe, kd2= fill_missing_by(dataframe, 'reporting_area', 'street')
+    dataframe, kd3  = fill_missing_by(dataframe, 'reporting_area', 'district')
+    # dataframe = dataframe.dropna(subset=['DISTRICT', 'REPORTING_AREA', 'LAT', 'LONG'], how='all')
+
+
     return dataframe
-
-def ultimate_drop(dataframe: pd.DataFrame) -> pd.DataFrame:
-
-    dataframe = dataframe.dropna(subset=['DISTRICT', 'LAT', 'LONG', 'STREET'], how='all')
-    dataframe = dataframe.dropna(subset=['STREET', 'LONG', 'LAT'], how='all')
-    dataframe = dataframe.dropna(subset=['LAT', 'LONG'], how='all')
-    # dataframe = dataframe.dropna(subset=['DISTRICT', 'STREET'], how='all')
-    # dataframe = dataframe.dropna(subset=['REPORTING_AREA', 'LAT', 'LONG'], how='all')
-    dataframe = dataframe[dataframe['DISTRICT'].str.len() <= 3]
-    dataframe = dataframe.dropna(subset='REPORTING_AREA')
-
-    return dataframe
-
 
 def save_to_file(df: pd.DataFrame, name: str):
     """
@@ -213,5 +222,5 @@ def save_to_file(df: pd.DataFrame, name: str):
     :param name:
     :return:
     """
-    df.to_csv(fr'C:\Users\igakl\Desktop\DataCrimesBoston\cleaned_data/{name}.csv', sep=';', index=False)
+    df.to_csv(fr'C:\Users\igakl\Desktop\DataCrimesBoston\data\clean/{name}.csv', sep=';', index=False)
     print(f"File {name} saved.")
