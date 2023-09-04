@@ -26,7 +26,7 @@ def file_to_df(path: str, separator: str, ind_col = None) -> pd.DataFrame:
     :return: pd.DataFrame
     """
     load_dotenv()
-    file = pd.read_csv(os.getenv(path), sep=separator, index_col=ind_col)
+    file = pd.read_csv(os.getenv(path), sep=separator, index_col=ind_col, low_memory=False)
     dataframe = pd.DataFrame(file)
     return dataframe
 
@@ -43,7 +43,7 @@ def case_indexing_date_time(dataframe: pd.DataFrame) -> pd.DataFrame:
     dataframe['STREET']= dataframe['STREET'].astype(str).str.title()
 
     dataframe = spit_date_and_time(dataframe, 'OCCURRED_ON_DATE')
-    dataframe['DATE'] = pd.to_datetime(dataframe['DATE'])
+    dataframe['DATE'] = pd.to_datetime(dataframe['DATE'], format="mixed")
 
     dataframe = dataframe.drop('LOCATION', axis=1)
     dataframe = dataframe.sort_values(by=['DATE'])
@@ -85,19 +85,6 @@ def standardize_streets(dataframe):
     dataframe['STREET'] = dataframe['STREET'].apply(lambda x: re.sub(pattern, '', x, flags=re.IGNORECASE))
     return dataframe
 
-def spit_date_and_time(dataframe: pd.DataFrame, col_name: str):
-
-    col_name = col_name.upper()
-    occurred = dataframe[col_name]
-    time = [t.split()[-1] for t in occurred]
-    date = [d.split()[0] for d in occurred]
-
-
-    dataframe.drop(col_name, axis=1, inplace=True)
-    dataframe.insert(7, 'DATE', date, allow_duplicates=True)
-    dataframe.insert(8, 'TIME', time, allow_duplicates=True)
-
-    return dataframe
 
 def fill_missing_ucr_and_shootings(dataframe: pd.DataFrame) -> pd.DataFrame:
 
@@ -166,28 +153,24 @@ def fill_missing_lat_long_by(dataframe: pd.DataFrame,
 def fill_missing_by(dataframe: pd.DataFrame, key: str, values: str):
     """
     todo: re-define so that values: list[str] for lat and long
-    Creates a dict with keys = unique keys, then
+    Creates a dict with unique *keys, then
     iterates through missing keys in DataFrame and updates null value if
     any(values) of missing keys is found in dict.values()
     """
 
     key = key.upper()
     values = values.upper()
-    # values = [i.upper() for i in values]
-
-    # if len(values) >1:
 
     keys_for_dict = (dataframe[(dataframe[key].notnull())][key].unique())
-    df_slice = dataframe.loc[:, [key, values]]
 
     key_dict = {}
 
     for keys in keys_for_dict:
         key_dict[keys] = []
 
-    for i in range(len(df_slice)):
-        if df_slice.loc[i, key] in key_dict.keys():
-            key_dict[df_slice.loc[i, key]].append(df_slice.loc[i, values])
+    for i in range(len(dataframe)):
+        if dataframe.loc[i, key] in key_dict.keys():
+            key_dict[dataframe.loc[i, key]].append(dataframe.loc[i, values])
 
     missing_data = dataframe.loc[dataframe[key].isnull()][[key, values]]
 
@@ -200,7 +183,39 @@ def fill_missing_by(dataframe: pd.DataFrame, key: str, values: str):
 
     return dataframe, key_dict
 
-def clean_all(dataframe: pd.DataFrame):
+def fill_missing_by_other_df(df1: pd.DataFrame, df2: pd.DataFrame, key: str, val: str):
+    """
+    Designed to fill missing values in DataFrame (df2),
+    where all values in specific column are missing (val)
+    by dictionary values made from "other" DataFrame (df1)
+    :param df1: DataFrame to take k:v pairs from
+    :param df2: DataFrame to fill
+    :param key, val: for dictionary
+    :return: filled df2
+    """
+    key, val = key.upper(), val.upper()
+
+    filler = {}
+    filler_keys = (df1[(df1[key].notnull())][key].unique())
+
+    for fk in filler_keys:
+        filler[fk] = []
+
+    for i in range(len(df1)):
+        if df1.loc[i, key] in filler.keys():
+            filler[df1.loc[i, key]].append(df1.loc[i, val])
+
+    missing_data = df2.loc[df2[val].isnull()][[key, val]]
+
+    for index, row in missing_data.iterrows():
+        for k, v in filler.items():
+            if row[key] == k:
+                df2.at[index, val] = v[0]
+                break
+
+    return df2
+
+def clean_first_four(dataframe: pd.DataFrame):
 
     dataframe = case_indexing_date_time(dataframe)
     dataframe = fill_missing_ucr_and_shootings(dataframe)
@@ -211,7 +226,50 @@ def clean_all(dataframe: pd.DataFrame):
     dataframe, kd1 = fill_missing_by(dataframe, 'district', 'street')
     dataframe, kd2= fill_missing_by(dataframe, 'reporting_area', 'street')
     dataframe, kd3  = fill_missing_by(dataframe, 'reporting_area', 'district')
-    # dataframe = dataframe.dropna(subset=['DISTRICT', 'REPORTING_AREA', 'LAT', 'LONG'], how='all')
+    dataframe = dataframe.drop_duplicates()
+    dataframe = dataframe.dropna(subset=['DISTRICT', 'REPORTING_AREA', 'LAT', 'LONG'], how='all')
+
+
+    return dataframe
+
+def clean_last_four(filler_df: pd.DataFrame, dataframe: pd.DataFrame):
+
+    dataframe = case_indexing_date_time(dataframe)
+    dataframe = fill_missing_ucr_and_shootings(dataframe)
+    dataframe = change_dtypes(dataframe)
+    dataframe = standardize_streets(dataframe)
+    dataframe, loc_dict1 = fill_missing_lat_long_by(dataframe, 'DISTRICT')
+    dataframe, loc_dict2 = fill_missing_lat_long_by(dataframe, 'STREET')
+    dataframe = fill_missing_by_other_df(filler_df, dataframe, 'OFFENSE_CODE', 'OFFENSE_CODE_GROUP')
+    dataframe = fill_missing_by_other_df(filler_df, dataframe, 'OFFENSE_CODE', 'UCR_PART')
+    dataframe = fill_missing_by_other_df(filler_df, dataframe, 'DISTRICT', 'OFFENSE_CODE_GROUP')
+    dataframe, kd = fill_missing_by(dataframe, 'district', 'street')
+    dataframe, kd = fill_missing_by(dataframe, 'reporting_area', 'street')
+    dataframe, kd = fill_missing_by(dataframe, 'reporting_area', 'district')
+    dataframe, kd = fill_missing_by(dataframe, 'district', 'reporting_area') # NOT IN 2022
+    dataframe, kd = fill_missing_by(dataframe, 'offense_code_group', 'offense_code') # NOT IN 2022
+    dataframe = dataframe.dropna(subset=['DISTRICT', 'REPORTING_AREA', 'LAT', 'LONG'], how='all')
+    dataframe = dataframe.dropna(subset=['LAT', 'LONG'], how='all')
+
+
+    return dataframe
+
+def clean_last(filler_df: pd.DataFrame, dataframe: pd.DataFrame):
+
+    dataframe = case_indexing_date_time(dataframe)
+    dataframe = fill_missing_ucr_and_shootings(dataframe)
+    dataframe = change_dtypes(dataframe)
+    dataframe = standardize_streets(dataframe)
+    dataframe, loc_dict1 = fill_missing_lat_long_by(dataframe, 'DISTRICT')
+    dataframe, loc_dict2 = fill_missing_lat_long_by(dataframe, 'STREET')
+    dataframe = fill_missing_by_other_df(filler_df, dataframe, 'OFFENSE_CODE', 'OFFENSE_CODE_GROUP')
+    dataframe = fill_missing_by_other_df(filler_df, dataframe, 'OFFENSE_CODE', 'UCR_PART')
+    dataframe = fill_missing_by_other_df(filler_df, dataframe, 'DISTRICT', 'OFFENSE_CODE_GROUP')
+    dataframe, kd = fill_missing_by(dataframe, 'district', 'street')
+    dataframe, kd = fill_missing_by(dataframe, 'reporting_area', 'street')
+    dataframe, kd = fill_missing_by(dataframe, 'reporting_area', 'district')
+    dataframe = dataframe.dropna(subset=['DISTRICT', 'REPORTING_AREA', 'LAT', 'LONG'], how='all')
+    dataframe = dataframe.dropna(subset=['LAT', 'LONG'], how='all')
 
 
     return dataframe
@@ -224,3 +282,17 @@ def save_to_file(df: pd.DataFrame, name: str):
     """
     df.to_csv(fr'C:\Users\igakl\Desktop\DataCrimesBoston\data\clean/{name}.csv', sep=';', index=False)
     print(f"File {name} saved.")
+
+def spit_date_and_time(dataframe: pd.DataFrame, col_name: str):
+    """Used in case_indexing_date_time()"""
+    col_name = col_name.upper()
+    occurred = dataframe[col_name]
+    time = [t.split()[-1] for t in occurred]
+    date = [d.split()[0] for d in occurred]
+
+
+    dataframe.drop(col_name, axis=1, inplace=True)
+    dataframe.insert(7, 'DATE', date, allow_duplicates=True)
+    dataframe.insert(8, 'TIME', time, allow_duplicates=True)
+
+    return dataframe
