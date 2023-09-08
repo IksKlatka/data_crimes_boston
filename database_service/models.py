@@ -6,7 +6,7 @@ class Incident:
     id: int
     incident_number: str
     offence_code: int
-    street_id: int
+    area_id: int
     shooting: bool
     date: datetime.datetime
     time: datetime.time
