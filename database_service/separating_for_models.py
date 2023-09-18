@@ -103,7 +103,8 @@ def print_separated(group: dict):
 
 if __name__ == '__main__':
     config()
-    df = file_to_df("ALL_YEARS", separator=';')
+    # df = file_to_df("ALL_YEARS", separator=';')
+    df = file_to_df("CLEANED_2017", separator=';')
 
     area_group = sep_areas(df)
     offence_group = sep_offenses(df)
@@ -113,6 +114,6 @@ if __name__ == '__main__':
     off = to_offense_model(offence_group)
     ig = assign_district_and_street_ids(to_incident_model(incident_group), ar)
 
-    print(len(ar))
-    print(len(off))
-    print(len(ig))
+    t = df[:3]
+    igt = sep_incidents(t)
+    print(igt)

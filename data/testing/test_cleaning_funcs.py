@@ -1,21 +1,13 @@
-import datetime
-import os
-import random
-
-import pandas as pd
 import pytest
-from dotenv import load_dotenv
-
 from data.cleaning_algorithms import *
 
-test_dataframe = pd.DataFrame()
+
 class TestCleaningDataFuncs:
 
-    load_dotenv()
     @pytest.fixture
     def load_data(self):
-        df = file_to_df("YEAR_2018", separator=';')
-        df = df[75000:85000][:]
+        df = file_to_df("TESTING_CSV", separator=';')
+        # return df[75000:85000][:]
         return df
 
     @pytest.fixture
@@ -32,6 +24,7 @@ class TestCleaningDataFuncs:
 
     def test_loads_dataframe(self, load_data):
         assert type(load_data) == pd.DataFrame
+        assert len(load_data.columns) == 17
 
     def test_split_date_time(self, load_data):
         load_data = spit_date_and_time(load_data)
@@ -99,7 +92,7 @@ class TestCleaningDataFuncs:
         assert pd.NA not in key_dict.keys()
         # district values have changed
         assert len(missing_before) != len(updated_data[updated_data['DISTRICT'].isnull()])
-        # street values ramin the same
+        # street values remain the same
         assert len(missing_streets) == len(updated_data[updated_data['STREET'].isnull()])
 
 
