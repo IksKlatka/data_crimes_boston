@@ -1,7 +1,7 @@
-import logging
-from logging.config import fileConfig
-from dotenv import load_dotenv
 import os
+from logging.config import fileConfig
+import logging
+from dotenv import load_dotenv
 from sqlalchemy import engine_from_config
 from sqlalchemy import pool
 
@@ -22,15 +22,14 @@ if config.config_file_name is not None:
 # target_metadata = mymodel.Base.metadata
 target_metadata = None
 
+
 load_dotenv()
-url = os.getenv('DB_URL', None)
-if url:
-    config.set_main_option(url, 'sqlalchemy.url')
+URL = os.getenv("DB_URL", None)
+
+if URL:
+    config.set_main_option('sqlalchemy.url', URL)
 else:
-    logging.error("No db path specified!!!")
-    exit(1)
-
-
+    logging.error("No valid db URL passed.")
 # other values from the config, defined by the needs of env.py,
 # can be acquired:
 # my_important_option = config.get_main_option("my_important_option")
@@ -58,7 +57,7 @@ def run_migrations_offline() -> None:
     )
 
     with context.begin_transaction():
-        logging.info("Running _offline_ migrations.")
+        logging.info('Offline migrations running.')
         context.run_migrations()
 
 
@@ -77,17 +76,13 @@ def run_migrations_online() -> None:
 
     with connectable.connect() as connection:
         context.configure(
-            connection=connection,
-            target_metadata=target_metadata
+            connection=connection, target_metadata=target_metadata
         )
 
-        logging.info("Running _online_ migrations.")
         with context.begin_transaction():
+            logging.info('Online migrations running.')
             context.run_migrations()
 
-
-if "seed" in context.get_x_argument(as_dictionary=True):
-    print("Seeding enabled...")
 
 if context.is_offline_mode():
     run_migrations_offline()

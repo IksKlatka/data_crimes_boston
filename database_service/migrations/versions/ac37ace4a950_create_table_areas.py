@@ -1,8 +1,8 @@
-"""create_areas
+"""create table areas
 
-Revision ID: 9ac2c9a08d49
-Revises: 09f988fbc691
-Create Date: 2023-09-06 11:02:14.390550
+Revision ID: ac37ace4a950
+Revises: 85ae6c78c35b
+Create Date: 2023-09-20 18:34:20.862208
 
 """
 from alembic import op
@@ -10,8 +10,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '9ac2c9a08d49'
-down_revision = '09f988fbc691'
+revision = 'ac37ace4a950'
+down_revision = '85ae6c78c35b'
 branch_labels = None
 depends_on = None
 
@@ -19,9 +19,8 @@ depends_on = None
 def upgrade() -> None:
     op.execute(f"""
     CREATE TABLE IF NOT EXISTS  areas (
-        id SERIAL PRIMARY KEY,
+        reporting_area INT PRIMARY KEY,
         street TEXT NOT NULL,
-        reporting_area INT NOT NULL, 
         district VARCHAR(3) CHECK (LENGTH(district) = 3)
     );
 """)
