@@ -18,7 +18,7 @@ class Incident(Base):
 
     def __repr__(self):
         return f"Incident: id={self.id}, incident_number={self.incident_number}, offense_code={self.offence_code}, " \
-               f"area_id={self.area_id}, shooting={self.shooting}, date={self.date}, time={self.time}, weekday={self.day_of_week}"
+               f"reporting_area={self.reporting_area}, shooting={self.shooting}, date={self.date}, time={self.time}, weekday={self.day_of_week}"
 class Area(Base):
     __tablename__ = "areas"
 

@@ -12,7 +12,11 @@ def concat_and_save() -> pd.DataFrame:
 
     all = pd.concat([df15, df16, df17, df18, df19, df20, df21, df22])
     all = all.dropna(subset=['REPORTING_AREA', 'DISTRICT'], how='all')
+    all['REPORTING_AREA'] = (all['REPORTING_AREA']).astype("Int32")
     all = all.dropna(subset='OFFENSE_CODE_GROUP')
     save_to_file(all, name="all_cleaned_datasets")
 
     return all
+
+if __name__ == '__main__':
+    concat_and_save()
