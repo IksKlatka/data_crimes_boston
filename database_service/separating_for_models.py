@@ -1,6 +1,8 @@
-from data.cleaning_algorithms import *
-from database_service.models import Incident, Area, Offense
+import pandas as pd
 
+from data.cleaning_algorithms import *
+# from database_service.dataclass_models import Incident, Area, Offense
+from database_service.models import Incident, Area, Offense
 
 def sep_areas(dataframe: pd.DataFrame) -> pd.DataFrame:
     dataframe = dataframe[['STREET',
@@ -29,7 +31,7 @@ def sep_incidents(dataframe: pd.DataFrame) -> pd.DataFrame:
     dataframe = dataframe[['INCIDENT_NUMBER',
                            'OFFENSE_CODE',
                            'DISTRICT',
-                           'STREET',
+                           'REPORTING_AREA',
                            'SHOOTING',
                            'DATE',
                            'TIME',
@@ -42,9 +44,8 @@ def sep_incidents(dataframe: pd.DataFrame) -> pd.DataFrame:
 def to_area_model(area_g: dict) -> list[Area]:
     areas = []
     for i, area in enumerate(area_g):
-        areas.append(Area(id=i+1,
+        areas.append(Area(reporting_area=area['REPORTING_AREA'],
                           street=area['STREET'],
-                          reporting_area=area['REPORTING_AREA'],
                           district=area['DISTRICT']))
 
     return areas
@@ -66,7 +67,7 @@ def to_incident_model(incident_g: dict) -> list[Incident]:
         incidents.append(Incident(id=i+1,
                                   incident_number=inc['INCIDENT_NUMBER'],
                                   offence_code=inc['OFFENSE_CODE'],
-                                  area_id=inc['STREET'],
+                                  reporting_area=inc['REPORTING_AREA'],
                                   shooting=inc['SHOOTING'],
                                   date=inc['DATE'],
                                   time=inc['TIME'],
@@ -74,37 +75,7 @@ def to_incident_model(incident_g: dict) -> list[Incident]:
 
     return incidents
 
-def assign_district_and_street_ids(incidents: list[Incident], areas: list[Area]) -> list[Incident]:
-
-    area_dict = {area.street: area.id for area in areas}
-
-    for incident in incidents:
-        area_street = incident.area_id
-        if area_street in area_dict:
-            incident.area_id = area_dict[area_street]
-        else:
-            incident.area_id = None
-
-    return incidents
-
 def to_models():
-
-    ar = to_area_model(area_group)
-    of = to_offense_model(offence_group)
-    ig = to_incident_model(incident_group)
-    new_ig = assign_district_and_street_ids(ig, ar)
-
-
-    return ar, of, new_ig
-
-def print_separated(group: dict):
-    print(group)
-
-
-if __name__ == '__main__':
-    config()
-    # df = file_to_df("ALL_YEARS", separator=';')
-    df = file_to_df("CLEANED_2017", separator=';')
 
     area_group = sep_areas(df)
     offence_group = sep_offenses(df)
@@ -112,8 +83,14 @@ if __name__ == '__main__':
 
     ar = to_area_model(area_group)
     off = to_offense_model(offence_group)
-    ig = assign_district_and_street_ids(to_incident_model(incident_group), ar)
+    ig = to_incident_model(incident_group)
 
-    t = df[:3]
-    igt = sep_incidents(t)
-    print(igt)
+    return ar, off, ig
+
+
+if __name__ == '__main__':
+    config()
+    df = file_to_df("ALL_YEARS", separator=';')
+    ar, off, ig = to_models()
+
+    print(ar[0])

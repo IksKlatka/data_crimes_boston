@@ -27,7 +27,7 @@ class Area(Base):
     district = Column(String, nullable=False)
 
     def __repr__(self):
-        return f"Area: id={self.id}, street={self.street}, reporting_area={self.reporting_area}, district={self.district}"
+        return f"Area: reporting_area={self.reporting_area},street={self.street}, district={self.district}"
 
 class Offense(Base):
     __tablename__ = "offenses"
