@@ -1,4 +1,4 @@
-"""alter incidents reference reporting area
+"""alter incidents reference reporting offense
 
 Revision ID: 206d675d085e
 Revises: ac37ace4a950

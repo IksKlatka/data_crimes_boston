@@ -20,7 +20,7 @@ def upgrade() -> None:
     op.execute("""
     CREATE TABLE IF NOT EXISTS incidents(
         id SERIAL PRIMARY KEY,
-        incident_number INT UNIQUE NOT NULL,
+        incident_number VARCHAR(16) UNIQUE NOT NULL,
         offense_code INT NOT NULL REFERENCES offenses(code),
         reporting_area INT NOT NULL,
         shooting BOOLEAN NOT NULL,
