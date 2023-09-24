@@ -3,7 +3,6 @@ import random
 import pandas as pd
 import pytest
 
-import database_service.models
 from data.cleaning_algorithms import file_to_df
 from database_service.separating_for_models import sep_areas, sep_offenses, sep_incidents, assign_district_and_street_ids
 from database_service.separating_for_models import to_area_model, to_offense_model, to_incident_model

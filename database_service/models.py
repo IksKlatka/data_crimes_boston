@@ -8,7 +8,7 @@ class Incident(Base):
 
     id = Column(Integer, primary_key=True)
     incident_number = Column(String, nullable=False, unique=True)
-    offence_code = Column(Integer, nullable=False)
+    offense_code = Column(Integer, nullable=False)
     reporting_area = Column(Integer, nullable=False)
     shooting = Column(Boolean, nullable=False)
     date = Column(Date, nullable=False)
@@ -17,7 +17,7 @@ class Incident(Base):
 
 
     def __repr__(self):
-        return f"Incident: id={self.id}, incident_number={self.incident_number}, offense_code={self.offence_code}, " \
+        return f"Incident: id={self.id}, incident_number={self.incident_number}, offense_code={self.offense_code}, " \
                f"reporting_area={self.reporting_area}, shooting={self.shooting}, date={self.date}, time={self.time}, weekday={self.day_of_week}"
 class Area(Base):
     __tablename__ = "areas"

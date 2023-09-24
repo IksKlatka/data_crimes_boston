@@ -66,7 +66,7 @@ def to_incident_model(incident_g: dict) -> list[Incident]:
     for i, inc in enumerate(incident_g):
         incidents.append(Incident(id=i+1,
                                   incident_number=inc['INCIDENT_NUMBER'],
-                                  offence_code=inc['OFFENSE_CODE'],
+                                  offense_code=inc['OFFENSE_CODE'],
                                   reporting_area=inc['REPORTING_AREA'],
                                   shooting=inc['SHOOTING'],
                                   date=inc['DATE'],
@@ -90,7 +90,7 @@ def to_models():
 
 if __name__ == '__main__':
     config()
-    df = file_to_df("ALL_YEARS", separator=';')
+    df = file_to_df("CLEANED_2015", separator=';')
     ar, off, ig = to_models()
 
-    print(ar[0])
+    print(ig[0])
