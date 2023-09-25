@@ -1,3 +1,5 @@
+from datetime import datetime
+
 import pandas as pd
 
 from data.cleaning_algorithms import *
@@ -69,13 +71,13 @@ def to_incident_model(incident_g: dict) -> list[Incident]:
                                   offense_code=inc['OFFENSE_CODE'],
                                   reporting_area=inc['REPORTING_AREA'],
                                   shooting=inc['SHOOTING'],
-                                  date=inc['DATE'],
+                                  date=datetime.strptime(inc['DATE'], '%Y-%m-%d').date(),
                                   time=inc['TIME'],
                                   day_of_week=inc['DAY_OF_WEEK']))
 
     return incidents
 
-def to_models():
+def to_models(df: pd.DataFrame):
 
     area_group = sep_areas(df)
     offence_group = sep_offenses(df)
@@ -90,7 +92,6 @@ def to_models():
 
 if __name__ == '__main__':
     config()
-    df = file_to_df("CLEANED_2015", separator=';')
-    ar, off, ig = to_models()
-
-    print(ig[0])
+    df = file_to_df("ALL_YEARS", separator=';')
+    # ar, off, ig = to_models(df)
+    # print(ig[0:100])

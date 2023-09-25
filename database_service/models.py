@@ -12,7 +12,7 @@ class Incident(Base):
     reporting_area = Column(Integer, nullable=False)
     shooting = Column(Boolean, nullable=False)
     date = Column(Date, nullable=False)
-    time = Column(Time, nullable=False)
+    time = Column(String, nullable=False)
     day_of_week = Column(Integer, nullable=False)
 
 

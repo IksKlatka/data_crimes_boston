@@ -25,7 +25,7 @@ def upgrade() -> None:
         reporting_area INT NOT NULL,
         shooting BOOLEAN NOT NULL,
         date DATE NOT NULL,
-        time TIME NOT NULL,
+        time VARCHAR(9) NOT NULL,
         day_of_week INT NOT NULL CHECK (day_of_week > 0 AND day_of_week < 8)
         );
     """)
