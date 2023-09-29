@@ -42,7 +42,7 @@ def case_indexing_date_time(dataframe: pd.DataFrame) -> pd.DataFrame:
     dataframe['OFFENSE_DESCRIPTION']= dataframe['OFFENSE_DESCRIPTION'].astype(str).str.lower()
     dataframe['STREET']= dataframe['STREET'].astype(str).str.title()
 
-    dataframe = spit_date_and_time(dataframe, 'OCCURRED_ON_DATE')
+    dataframe = spit_date_and_time(dataframe)
     dataframe['DATE'] = pd.to_datetime(dataframe['DATE'], format="mixed")
 
     dataframe = dataframe.drop('LOCATION', axis=1)
@@ -152,10 +152,10 @@ def fill_missing_lat_long_by(dataframe: pd.DataFrame,
 
 def fill_missing_by(dataframe: pd.DataFrame, key: str, values: str):
     """
-    todo: re-define so that values: list[str] for lat and long
-    Creates a dict with unique *keys, then
-    iterates through missing keys in DataFrame and updates null value if
-    any(values) of missing keys is found in dict.values()
+    Creates a dictionary in which the keys are unique values from column1 whose deficiencies you want to fill.
+    Iterates through the DataFrame collecting the values (column2) for those keys.
+    It creates a new DataFrame from column1 and column2, where column1 has the missing values itself.
+    If it finds a value in column2 that corresponds to a key, it inserts the value of the key into column1.
     """
 
     key = key.upper()
@@ -283,15 +283,14 @@ def save_to_file(df: pd.DataFrame, name: str):
     df.to_csv(fr'C:\Users\igakl\Desktop\DataCrimesBoston\data\clean/{name}.csv', sep=';', index=False)
     print(f"File {name} saved.")
 
-def spit_date_and_time(dataframe: pd.DataFrame, col_name: str):
+def spit_date_and_time(dataframe: pd.DataFrame):
     """Used in case_indexing_date_time()"""
-    col_name = col_name.upper()
-    occurred = dataframe[col_name]
+    occurred = dataframe['OCCURRED_ON_DATE']
     time = [t.split()[-1] for t in occurred]
     date = [d.split()[0] for d in occurred]
 
 
-    dataframe.drop(col_name, axis=1, inplace=True)
+    dataframe.drop('OCCURRED_ON_DATE', axis=1, inplace=True)
     dataframe.insert(7, 'DATE', date, allow_duplicates=True)
     dataframe.insert(8, 'TIME', time, allow_duplicates=True)
 

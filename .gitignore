@@ -10,3 +10,4 @@ migrations/README
 */.env
 .env
 sqlalchemy_import/testing/.pytest_cache
+database_service/alembic.ini
