@@ -1,0 +1,1 @@
+Here you can find everything I needed to create, read, update and delete data from the database. Starting from migration scripts, to table models created in SQLAlchemy, to an asynchronous system for the above operations. In addition, you'll find scripts that collect all of the cleaned up data and dump it into the database using gather(tasks). 
